@@ -1,0 +1,67 @@
+---
+# tasks file for enqack.logstash
+
+- name: Check logstash package checksum file (local)
+  stat:
+    path: "{{ role_path }}/files/{{ logstash_shasums }}"
+  become: false
+  run_once: true
+  register: logstash_checksum
+  delegate_to: 127.0.0.1
+
+- name: Get logstash package checksum file (local)
+  get_url:
+    url: "{{ logstash_checksum_file_url }}"
+    dest: "{{ role_path }}/files/{{ logstash_shasums }}"
+  become: false
+  when: not logstash_checksum.stat.exists | bool
+  delegate_to: 127.0.0.1
+
+- name: Get logstash package checksum (local)
+  shell: |
+    set -o pipefail
+    grep "{{ logstash_pkg }}" "{{ role_path }}/files/{{ logstash_shasums }}" | \
+    awk '{print $1}'
+  args:
+    executable: /bin/bash
+  become: false
+  run_once: true
+  register: logstash_sha512
+  delegate_to: 127.0.0.1
+
+- name: Check logstash package file (local)
+  stat:
+    path: "{{ role_path }}/files/{{ logstash_pkg }}"
+  become: false
+  run_once: true
+  register: logstash_package
+  delegate_to: 127.0.0.1
+
+- name: Download logstash (local)
+  get_url:
+    url: "{{ logstash_pkg_url }}"
+    dest: "{{ role_path }}/files/{{ logstash_pkg }}"
+    checksum: "sha512:{{ logstash_sha512.stdout }}"
+    #timeout: "42"
+  become: false
+  run_once: true
+  when: not logstash_package.stat.exists | bool
+  delegate_to: 127.0.0.1
+
+- name: Copy logstash package to remote
+  copy:
+    src: "{{ role_path }}/files/{{ logstash_pkg }}"
+    dest: "/tmp/{{ logstash_pkg }}"
+  become: false
+
+- name: Install logstash
+  apt:
+    deb: "/tmp/{{ logstash_pkg }}"
+
+- name: Cleanup remote
+  file:
+    path: "/tmp/{{ logstash_pkg }}"
+    state: "absent"
+  become: false
+  run_once: true
+  delegate_to: 127.0.0.1

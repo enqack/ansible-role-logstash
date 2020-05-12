@@ -1,0 +1,21 @@
+---
+# tasks file for enqack.logstash
+
+- name: Gather os specific variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ role_path }}/vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ role_path }}/vars/{{ ansible_distribution }}.yml"
+    - "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
+
+- name: Install OpenJDK
+  package:
+    name: openjdk-8-jdk
+    state: present
+
+- name: Include os specific tasks
+  include: "{{ item }}"
+  with_first_found:
+    - "{{ role_path }}/tasks/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ role_path }}/tasks/{{ ansible_distribution }}.yml"
+    - "{{ role_path }}/tasks/{{ ansible_os_family }}.yml"

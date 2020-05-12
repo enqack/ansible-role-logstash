@@ -1,0 +1,8 @@
+---
+# vars file for enqack.logstash
+
+logstash_shasums: "logstash-{{ logstash_version }}.deb.sha512"
+logstash_checksum_file_url: "https://artifacts.elastic.co/downloads/logstash/{{ logstash_shasums }}"
+
+logstash_pkg: "logstash-{{ logstash_version }}.deb"
+logstash_pkg_url: "https://artifacts.elastic.co/downloads/logstash/{{ logstash_pkg }}"
